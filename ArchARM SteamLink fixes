@@ -1,0 +1,62 @@
+#    Prevent to update kernel
+
+#Look line containing "IgnorePkg   =" add "linux-api-headers linux-armv7 linux-armv7-headers kexec-tools"
+#So it would look like "IgnorePkg   = linux-api-headers linux-armv7 linux-armv7-headers kexec-tools"
+
+#Edit pacman.conf accordingly
+nano /etc/pacman.conf
+
+
+
+#    Fix stale GPG keys
+
+#Edit /etc/pacman.conf
+#Look line containing "SigLevel    = Required DatabaseOptional" replace "Required DatabaseOptional" to "Never"
+#Remember to revert changes after pacman-key(s) are populated.
+
+#Edit pacman.conf accordingly
+nano /etc/pacman.conf
+
+#Update repo db
+pacman -Sy
+
+#Download new keyrings
+pacman -S archlinux-keyring archlinuxarm-keyring
+
+#Remove old GPG keys
+rm -r /etc/pacman.d/gnupg/*
+
+#Init new keys
+pacman-key --init
+
+#Populate keys
+pacman-key --populate archlinux archlinuxarm
+
+
+
+#   Fix missing SSH keys
+
+#List if old files are present
+ls /etc/ssh/ssh_host*
+
+#if they were you can remove them
+rm /etc/ssh/ssh_host*
+
+#generate all new keys
+ssh-keygen -A
+
+#Set ownership and permissions for them (chown to change ownership and chmod to change permissions)
+sudo chown root:root /etc/ssh/*_key /etc/ssh/*_key.pub
+sudo chmod 600 /etc/ssh/*_key
+sudo chmod 644 /etc/ssh/*_key.pub
+
+
+
+#   Fix missing modules
+
+#Create 5.10.32-mrvl directory under /lib/modules
+mkdir -p /lib/modules/5.10.32-mrvl
+
+#Copy modules from 5.4.24 to 5.10-32-mrvl (Some cases fail to find modules.
+#Example. when installin iptables. Didn't find any other solutions to fix this.)
+cp -r /lib/modules/5.4.24/* lib/modules/5.10.32-mrvl/
